@@ -176,7 +176,7 @@ str r4 , [r1 , #GPIO_DOUT]
 
 
 bx lr
-
+/*
 .thumb_func
 main_loop
 
@@ -184,9 +184,7 @@ MOV r1, #0b110
 LDR r2, SCR
 STR r1,[r2]
 WFI
-
-
-
+*/
 
 		
         .thumb_func
