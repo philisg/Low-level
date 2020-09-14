@@ -1,0 +1,21 @@
+// Loop which counts up until (and greater than) the maxnumber.
+// r0 is used to store the counter, and r1 is used as max value.
+// the counter increments r0 by 1 for every occurance of the function.
+
+.code 
+mov r0, #0
+ldr r1,=maxnumber
+ldr r1,[r1,#0]
+bl counter 
+
+end:
+swi 6 
+
+counter: 
+    add r0, r0, #1
+    cmp r0, r1
+    bgt end
+    bl counter
+
+.data
+    maxnumber: .word 0x0005
