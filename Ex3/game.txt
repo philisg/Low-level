@@ -1,0 +1,70 @@
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <linux/fb.h>
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+//#include <time.h>
+
+int gpfd=0;
+
+void exit_clean(void){
+	close(gpfd);
+	exit(EXIT_SUCCESS);
+}
+void exit_error(){
+	close(gpfd);
+	exit(EXIT_FAILURE);
+}
+void keypress_handler(int signal){
+char input_buff;
+	if(read(gpfd, &input_buff,1) !=-1){
+		printf("sucsessfully read the input data: %d\n",input_buff);
+
+	}
+	else 
+	{
+		printf("failed to read the input data %d\n",input_buff);
+
+	}
+
+
+}
+
+int main(int argc, char *argv[])
+{
+	printf("Hello World, I'm game!\n");
+	gpfd=open("/dev/gamepad",O_RDWR);
+	if(gpfd==-1){
+	
+		printf("error:unable to open gamepad device, exiting.\n");
+		exit(EXIT_FAILURE);
+	}
+	if(signal(SIGIO,&keypress_handler) ==SIG_ERR){
+	
+		printf(" error unable to create signal handler\n");
+		exit_error();
+	
+	}
+	if(fcntl(gpfd, F_SETOWN,getpid())==-1){
+		printf(" error failed to set owner of gamepad device\n");
+		exit_error();
+		
+	}
+	long flags = fcntl(gpfd,F_GETFL);
+	if(fcntl(gpfd,F_SETFL, flags | FASYNC) ==-1){
+		printf(" error failed to set fasync flag\n");
+		exit_error();
+		
+	}
+	while(1){
+	pause();
+	}
+	
+	exit_clean();
+	return 0;
+}
