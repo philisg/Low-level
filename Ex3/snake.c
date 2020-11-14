@@ -4,9 +4,9 @@
 #include <conio.h>
 
 // Graphic
-#define head '€'
-#define tail '+'
-#define topBoarder '| |'
+#define head '*'
+#define tail '#'
+#define topBoarder '|_|'
 #define middleBoarder '|'
 #define food '$'
 #define voidSpace ' '
@@ -18,13 +18,13 @@
 #define yDim 30
 #define minSpeed 200
 #define maxSpeed 40
-#define bombObstacleSize 4
-#define playerSpawnPaddingFront 3
-#define playerSpawnPaddingSides 8
+#define bombObstacleSize 2
+#define playerSpawnPaddingFront 8
+#define playerSpawnPaddingSides 1
 
 
 char map[yDim][xDim];
-char key;
+//char key;
 int alive = 1;
 int x;
 int y;
@@ -36,13 +36,13 @@ int dirY;
 int oldBodyCor[yDim * xDim][2];
 int body[yDim * xDim][2];
 int numOfBody = 0;
-int keyPressed;
+//int keyPressed;
 int boarder = 2;
 int bugsPrevented;
 int oldBugsPrevented;
 static int illegalSpawn;
 
-void genMap(int xLength, int yLength);
+void makeMap(int xLength, int yLength);
 void draw();
 void move();
 void genPlayer();
@@ -59,13 +59,16 @@ void choseGameOverPath();
 void printSnake();
 void printSnake2();
 void printSnake3();
+void menuSystem();
+int menuSystemLogic(int MenuChoice);
 
 int main() {
     hideCursor();
     do {
         reset();
+        menuSystem();
         system("cls");
-        genMap(xDim, yDim);
+        makeMap(xDim, yDim);
         genPlayer();
         while (illegalSpawn) {
             genPlayer();
@@ -89,7 +92,7 @@ int main() {
     } while (alive);
 }
 
-void genMap(int xLength, int yLength) {
+void makeMap(int xLength, int yLength) {
     int x, y;
     for (y = 0; y < yLength; ++y) {
         for (x = 0; x < xLength; ++x) {
@@ -191,9 +194,11 @@ void genDefDir() {
     }
 }
 void keyInput() {
+    int keyPressed = 1;
+    char key = 0;
+
     if (_kbhit()) {
-        key = _getch();
-        keyPressed = 1;
+        char key = _getch();
 
         if (key == 'w' && keyPressed == 1) {
             dirX = 0;
@@ -316,7 +321,7 @@ void move() {
         for (x = 0; x < xDim; ++x) {
             switch (map[y][x]) {
             case head:
-                if (map[y + dirY][x + dirX] == ' ') {
+                if (map[y + dirY][x + dirX] == voidSpace) {
                     freeMove();
                     return;
                 }
@@ -390,6 +395,9 @@ void gameOverPrint() {
     printSnake3();
 }
 void choseGameOverPath() {
+    int keyPressed = 0;
+    char key = 0;
+
     if (_kbhit()) {
         key = _getch();
         keyPressed = 1;
@@ -410,6 +418,99 @@ void choseGameOverPath() {
         printf(" going into power down \r \n");
     }
 }
+
+void menuSystem() {
+#include <stdio.h>
+        int WhereInMenu = 1;
+        char KeyTouched = 0;
+        int keyPressed= 0;
+
+        menuSystemLogic(1);
+
+        for (;;)
+        {
+
+
+            if (_kbhit()) {
+                KeyTouched = _getch();
+                keyPressed = 1;
+            }
+            if (KeyTouched == 's' && keyPressed == 1)
+            {
+                WhereInMenu++;
+                keyPressed = 0;
+                if (WhereInMenu > 4)
+                {
+                    WhereInMenu = 1;
+                }
+                menuSystemLogic(WhereInMenu);
+                
+            }
+
+            else if (KeyTouched == 'w' && keyPressed == 1)
+            {
+                WhereInMenu--;
+                keyPressed = 0;
+                if (WhereInMenu < 1)
+                {
+                    WhereInMenu = 4;
+                }
+                menuSystemLogic(WhereInMenu);
+            }
+            else if (KeyTouched == 'd' && keyPressed == 1)
+            {
+                system("cls");
+                printf("Press Enter To Exit...");
+                //Do something
+                return 0;
+            }
+        }
+}
+
+
+int menuSystemLogic(int MenuChoice)
+{
+    switch (MenuChoice)
+    {
+    case 1:
+        system("cls");
+        printf("\n* Option Number 1");
+        printf("\n  Option Number 2");
+        printf("\n  Option Number 3");
+        printf("\n  Option Number 4");
+        break;
+
+    case 2:
+        system("cls");
+        printf("\n  Option Number 1");
+        printf("\n* Option Number 2");
+        printf("\n  Option Number 3");
+        printf("\n  Option Number 4");
+        break;
+
+    case 3:
+        system("cls");
+        printf("\n  Option Number 1");
+        printf("\n  Option Number 2");
+        printf("\n* Option Number 3");
+        printf("\n  Option Number 4");
+        break;
+
+    case 4:
+        system("cls");
+        printf("\n  Option Number 1");
+        printf("\n  Option Number 2");
+        printf("\n  Option Number 3");
+        printf("\n* Option Number 4");
+        break;
+
+    default:
+        system("cls");
+        printf("\nError");
+    }
+    return 0;
+}
+
 
 void hideCursor() {
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
