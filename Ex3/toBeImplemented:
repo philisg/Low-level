@@ -1,0 +1,39 @@
+// Creates a boarder in the game (to show where the player can't move)
+void makeGameField(int xLength, int yLength) {
+    int x, y;
+    for (y = 0; y < yLength; ++y) {
+        for (x = 0; x < xLength; ++x) {
+            if (y == 0 || y == yLength - 1) {
+                gameField[y][x] = topBoarder;
+            }
+            else if (x == 0 || x == xLength - 1) {
+                gameField[y][x] = middleBoarder;
+            }
+            else if (x == xDim / 2 && y == yDim / 2) {
+                for (int i = 0; i < bombObstacleSize; i++) {
+                    gameField[y - i][x + i] = bomb;
+                    gameField[y + i][x + i] = bomb;
+                    gameField[y + i][x - i] = bomb;
+                    gameField[y - i][x - i] = bomb;
+                }
+            }
+            else if (gameField[y][x] != bomb) {
+                gameField[y][x] = voidSpace;
+            }
+        }
+    }
+}
+
+
+// Take the feature from here that checks the spawn
+    else {
+        for (int i = y - playerSpawnPaddingSides; i <= y + playerSpawnPaddingSides; ++i) {
+            for (int j = x - playerSpawnPaddingFront; j <= x + playerSpawnPaddingFront; ++j) {
+                if (gameField[i][j] != voidSpace) {
+                    illegalSpawn = 1;
+                    bugsPrevented++;
+                    printf(" bad spawn found @ %d %d: \r \n", i, j);
+                }
+            }
+        }
+    }
