@@ -23,7 +23,7 @@
 #define playerSpawnPaddingSides 1
 
 
-char map[yDim][xDim];
+char gameField[yDim][xDim];
 //char key;
 int alive = 1;
 int x;
@@ -97,21 +97,21 @@ void makeMap(int xLength, int yLength) {
     for (y = 0; y < yLength; ++y) {
         for (x = 0; x < xLength; ++x) {
             if (y == 0 || y == yLength - 1) {
-                map[y][x] = topBoarder;
+                gameField[y][x] = topBoarder;
             }
             else if (x == 0 || x == xLength - 1) {
-                map[y][x] = middleBoarder;
+                gameField[y][x] = middleBoarder;
             }
             else if (x == xDim / 2 && y == yDim / 2) {
                 for (int i = 0; i < bombObstacleSize; i++) {
-                    map[y-i][x+i] = bomb;
-                    map[y+i][x+i] = bomb;
-                    map[y+i][x-i] = bomb;
-                    map[y-i][x-i] = bomb;
+                    gameField[y-i][x+i] = bomb;
+                    gameField[y+i][x+i] = bomb;
+                    gameField[y+i][x-i] = bomb;
+                    gameField[y-i][x-i] = bomb;
                 }
             }
-            else if (map[y][x] != bomb) {
-                map[y][x] = voidSpace;
+            else if (gameField[y][x] != bomb) {
+                gameField[y][x] = voidSpace;
             }
         }
     }
@@ -119,7 +119,7 @@ void makeMap(int xLength, int yLength) {
 void grow() {
     if (numOfBody == 0) {
         ++numOfBody;
-        map[body[0][0] - dirY][body[0][1] - dirX] = tail;
+        gameField[body[0][0] - dirY][body[0][1] - dirX] = tail;
         body[1][0] = body[0][0] - dirY;
         body[1][1] = body[0][1] - dirX;
         return;
@@ -128,7 +128,7 @@ void grow() {
         if (i == numOfBody) {
             body[i + 1][0] = oldBodyCor[i][0];
             body[i + 1][1] = oldBodyCor[i][1];
-            map[body[i + 1][0]][body[i + 1][1]] = tail;
+            gameField[body[i + 1][0]][body[i + 1][1]] = tail;
             ++numOfBody;
             return;
         }
@@ -139,7 +139,7 @@ void genDefDir() {
     srand(time(NULL));
     for (y = 0; y < yDim; ++y) {
         for (x = 0; x < xDim; ++x) {
-            switch (map[y][x]) {
+            switch (gameField[y][x]) {
             case head:
                 if (y <= (yDim / 2) - 1 && x <= (xDim / 2) - 1) {
                     if ((rand() % 2) == 0) {
@@ -257,14 +257,14 @@ void genPlayer() {
     int y = rand() % (yDim - boarder) + boarder;
     illegalSpawn = 0;
     // Checking if legal spawn location.
-    if (map[y][x] != voidSpace) {
+    if (gameField[y][x] != voidSpace) {
         illegalSpawn = 1;
         bugsPrevented++;
     }
     else {
         for (int i = y - playerSpawnPaddingSides; i <= y + playerSpawnPaddingSides; ++i) {
             for (int j = x - playerSpawnPaddingFront; j <= x + playerSpawnPaddingFront; ++j) {
-                if (map[i][j] != voidSpace) {
+                if (gameField[i][j] != voidSpace) {
                     illegalSpawn = 1;
                     bugsPrevented++;
                     printf(" bad spawn found @ %d %d: \r \n", i, j);                    
@@ -273,7 +273,7 @@ void genPlayer() {
         }
     }
     if (illegalSpawn == 0) {
-        map[y][x] = head;
+        gameField[y][x] = head;
         illegalSpawn = 0;
     }
 }
@@ -285,8 +285,8 @@ void genEnemy() {
         int x = rand() % (xDim - boarder) + boarder;
         int y = rand() % (yDim - boarder) + boarder;
         // Checking if legal spawn location.
-        if(map[y][x] == voidSpace) {
-            map[y][x] = food;
+        if(gameField[y][x] == voidSpace) {
+            gameField[y][x] = food;
             illegalSpawn = 0;
             return;
         }
@@ -301,7 +301,7 @@ void draw() {
     for (y = 0; y < xDim; ++y) {
         goToXY(yDim, y);
         for (x = 0; x < xDim; ++x) {
-            printf("%c", map[y][x]);
+            printf("%c", gameField[y][x]);
         }
         printf("\n");
     }
@@ -319,21 +319,21 @@ void draw() {
 void move() {
     for (y = 0; y < yDim; ++y) {
         for (x = 0; x < xDim; ++x) {
-            switch (map[y][x]) {
+            switch (gameField[y][x]) {
             case head:
-                if (map[y + dirY][x + dirX] == voidSpace) {
+                if (gameField[y + dirY][x + dirX] == voidSpace) {
                     freeMove();
                     return;
                 }
-                else if (map[y + dirY][x + dirX] == food) {
-                    map[y + dirY][x + dirX] = voidSpace;
+                else if (gameField[y + dirY][x + dirX] == food) {
+                    gameField[y + dirY][x + dirX] = voidSpace;
                     score += 10;
                     freeMove();
                     grow();
                     genEnemy();
                     return;
                 }
-                else if (map[y + dirY][x + dirX] != voidSpace && map[y + dirY][x + dirX] != food) {
+                else if (gameField[y + dirY][x + dirX] != voidSpace && gameField[y + dirY][x + dirX] != food) {
                     alive = 0;
                 }
             }
@@ -343,27 +343,27 @@ void move() {
 void freeMove() {
     char headY = y;
     char headX = x;
-    char temp = map[y][x];
-    map[y][x] = map[y + dirY][x + dirX];
-    map[y + dirY][x + dirX] = temp;
+    char temp = gameField[y][x];
+    gameField[y][x] = gameField[y + dirY][x + dirX];
+    gameField[y + dirY][x + dirX] = temp;
     body[0][0] = y + dirY;
     body[0][1] = x + dirX;
     for (int i = 1; i <= numOfBody; ++i) {
         if (i == 1) {
             oldBodyCor[i][0] = body[i][0];
             oldBodyCor[i][1] = body[i][1];
-            char temp = map[body[i][0]][body[i][1]];
-            map[body[i][0]][body[i][1]] = map[headY][headX];
-            map[headY][headX] = temp;
+            char temp = gameField[body[i][0]][body[i][1]];
+            gameField[body[i][0]][body[i][1]] = gameField[headY][headX];
+            gameField[headY][headX] = temp;
             body[i][0] = headY;
             body[i][1] = headX;
             continue;
         }
         oldBodyCor[i][0] = body[i][0];
         oldBodyCor[i][1] = body[i][1];
-        char temp = map[body[i][0]][body[i][1]];
-        map[body[i][0]][body[i][1]] = map[oldBodyCor[i - 1][0]][oldBodyCor[i - 1][1]];
-        map[oldBodyCor[i - 1][0]][oldBodyCor[i - 1][1]] = temp;
+        char temp = gameField[body[i][0]][body[i][1]];
+        gameField[body[i][0]][body[i][1]] = gameField[oldBodyCor[i - 1][0]][oldBodyCor[i - 1][1]];
+        gameField[oldBodyCor[i - 1][0]][oldBodyCor[i - 1][1]] = temp;
         body[i][0] = oldBodyCor[i - 1][0];
         body[i][1] = oldBodyCor[i - 1][1];
     }
