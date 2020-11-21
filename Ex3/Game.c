@@ -12,20 +12,22 @@
 
 
 
+
 #define scr_width 320
 #define scr_height 240
 #define scr_BPP 2 //16 bits per pixel(in bytes)
 #define whole_screen scr_width*scr_height*scr_BPP
 
-#define BLOCK_SIZE 10// size of block is 5x5 pixels
+#define BLOCK_SIZE 10
 
 #define BLOCK_SIZE_X (scr_width/BLOCK_SIZE)
 #define BLOCK_SIZE_Y (scr_height/BLOCK_SIZE)
-#define MAX_LENGTH 10
+#define MAX_LENGTH 30
 
 
 struct fb_copyarea screen;
-int fbfd = 0, GPDD = 0; //GAMEPAD device driver
+int fbfd = 0, GPDD = 0; //Framebuffer function driver and GAMEPAD device driver
+
 
 uint16_t *framebuffer;
 typedef union {
@@ -37,14 +39,6 @@ typedef union {
 		uint16_t toint;
 } Color;
 
-void draw_pixel(uint16_t x, uint16_t y, Color color){
-	if(x < scr_width && x >= 0 && y < scr_height && y >=0){
-		framebuffer[ x+ y*scr_width ] = color.toint;
-	}else {
-		printf("invalid pixel position: (%d,%d), max %d x %d", x,y,(scr_width -1), (scr_height -1));
-		}
-
-}
 
 enum direction{
 	NONE 	=  0,
@@ -110,10 +104,7 @@ typedef struct {
 	Color color;
 } Item;
 
-Item Fruit;
-snake Snake;
 
-Color col_bg;
 
 void error_exit(void)
 {
@@ -127,6 +118,14 @@ void exit_clean(void)
 	error_exit();
 }
 
+void draw_pixel(uint16_t x, uint16_t y, Color color){
+	if(x < scr_width && x >= 0 && y < scr_height && y >=0){
+		framebuffer[ x+ y*scr_width ] = color.toint;
+	}else {
+		printf("invalid pixel position: (%d,%d), max %d x %d", x,y,(scr_width -1), (scr_height -1));
+		}
+
+}
 
 void draw_block(uint8_t x, uint8_t y, Color color)
 {
@@ -145,6 +144,7 @@ void clear_screen()
 	memset(framebuffer, 0, whole_screen);
 	flush_fb();
 }
+snake Snake;
 
 int crash(coordinate point)
 {
@@ -164,6 +164,8 @@ int crash(coordinate point)
 }
 
 
+Item Fruit;
+Color col_background;
 
 void place_fruit()
 {
@@ -230,7 +232,7 @@ void move_snake(enum direction dir)
 		if(Snake.lenght >= MAX_LENGTH)
 		{
 			printf("Your to good! Snake is at max lenght!");
-			memset(framebuffer, 0xF0F0, whole_screen);
+			memset(framebuffer, 0xFFF0, whole_screen);
 			for(i = 0; i < Snake.lenght; i++)
 			{
 				draw_block(Snake.pos[i].x, Snake.pos[i].y, Snake.color);
@@ -243,10 +245,12 @@ void move_snake(enum direction dir)
 	}
 	else
 	{
-		draw_block(Snake.pos[Snake.lenght].x, Snake.pos[Snake.lenght].y, col_bg);
+		draw_block(Snake.pos[Snake.lenght].x, Snake.pos[Snake.lenght].y, col_background);
 	}
 	draw_block(current_pos.x, current_pos.y, Snake.color);
 }
+
+
 
 
 
@@ -256,46 +260,42 @@ void start_game(void)
 	Snake.dir = NONE;
 	Snake.pos[0].x = BLOCK_SIZE_X/2;
 	Snake.pos[0].y = BLOCK_SIZE_Y/2;
-	Snake.color = color(15,15,30);
-	
-	Fruit.color = color(10,20,30);
-	int x = 0, y = 0;
-	/*for(x = -1; x <= 1; x++)
-	{
-		for(y = -1; y <= 1; y++)
-		{
-			draw_block(Snake.pos[0].x + x, Snake.pos[0].y + y, col_bg);
-		}
-	}*/
-	
+	Snake.color = color(0,63,0);
+	Fruit.color = color(1,20,8);
 	draw_block(Snake.pos[0].x, Snake.pos[0].y, Snake.color);
-	
 	place_fruit();
 	flush_fb();
 }
 	
+int8_t last_dir = 0;
 void button_push(int signal)
 {
 	char button, input_buffer;
+	
 	if(read(GPDD,&input_buffer, 1) != -1){
 		button = input_buffer & 0x0F; //Uses button 1-4
 		switch(button){
 			case 1:
 				move_snake(LEFT);
+				last_dir = LEFT;
 				break;
 			case 2:
 				move_snake(UP);
+				last_dir = UP;
 				break;
 			case 4:
 				move_snake(RIGHT);
+				last_dir = RIGHT;
 				break;
 			case 8:
 				move_snake(DOWN);
+				last_dir = DOWN;
 				break;
 			default:
-				move_snake(NONE);
+				move_snake(last_dir);
 		}
-		if(input_buffer) flush_fb();
+		//if(input_buffer)
+		flush_fb();
 	}
 	else{
 		printf("failed to read buttons!");
@@ -308,6 +308,7 @@ void button_push(int signal)
 int main(int argc, char *argv[])
 {
 	printf("Hello World, I'm game!\n");
+	printf("push one of the buttons 1 - 4 to start! \n");
 	
 	screen.dx = 0;
 	screen.dy = 0;
@@ -347,13 +348,15 @@ int main(int argc, char *argv[])
 		error_exit();
 	}
 	
-	
-	col_bg = color(0,0,0);
+	col_background = color(0,0,0);
 	
 	start_game();
 	while(1)
 	{
-		pause();
+		usleep(500000);
+		button_push(0);
+		
+		//pause();	
 	
 	}
 	munmap(framebuffer, screensize);
@@ -361,4 +364,3 @@ int main(int argc, char *argv[])
 	
 	exit(EXIT_SUCCESS);
 }
-
